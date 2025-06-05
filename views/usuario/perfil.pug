@@ -1,0 +1,33 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Mi Perfil – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        a.nav-link(href="/usuario/logout") Cerrar sesión
+
+    main.container
+      h2 Mi Perfil
+      .profile
+        .profile-img
+          img(src=user.url_imagen_perfil alt="Foto de perfil")
+        .profile-info
+          p
+            strong Nombre completo:
+            |  #{user.nombre} #{user.apellido}
+          p
+            strong Email:
+            |  #{user.email}
+          if user.intereses
+            p
+              strong Intereses:
+              |  #{user.intereses}
+          a.btn-secondary(href="/usuario/change-password") Cambiar contraseña
+
+    footer.footer
+      p © 2025 Artesanos.com

@@ -1,0 +1,27 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Iniciar sesión – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+
+    main.container
+      h2.center-text Iniciar sesión
+      if typeof error !== 'undefined'
+        p.alert-error #{error}
+      form.form-login(action="/usuario/login" method="POST")
+        label(for="email") Email:
+        input#email(type="email" name="email" required)
+        
+        label(for="contrasena") Contraseña:
+        input#contrasena(type="password" name="contrasena" required)
+        
+        button.btn-primary(type="submit") Entrar
+
+    footer.footer
+      p © 2025 Artesanos.com
