@@ -1,0 +1,38 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Subir Imagen – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        a.nav-link(href="/usuario/logout") Cerrar sesión
+
+    main.container
+      h2 Subir Imagen
+      form.form-imagen-create(action="/imagen/create" method="POST")
+        label(for="album_id") Selecciona Álbum:
+        select#album_id(name="album_id" required)
+          if album_id
+            option(value=album_id selected) Álbum Actual (ID #{album_id})
+          each a in albumes
+            if !album_id || album_id != a.album_id
+              option(value=a.album_id) #{a.titulo}
+
+        label(for="url") URL de la Imagen:
+        input#url(type="text" name="url" required placeholder="http://...jpg")
+
+        label(for="descripcion") Descripción:
+        textarea#descripcion(name="descripcion" rows="2" placeholder="Descripción breve")
+
+        label(for="tag_ids") Tags (mantén Ctrl para múltiples):
+        select#tag_ids(name="tag_ids" multiple)
+          each t in tags
+            option(value=t.tag_id) #{t.nombre}
+
+        button.btn-primary(type="submit") Subir
+        a.btn-secondary(href=`/imagen/list/${album_id || ''}`) Cancelar
+

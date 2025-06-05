@@ -1,0 +1,30 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Imágenes del Álbum – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        a.nav-link(href="/usuario/logout") Cerrar sesión
+
+    main.container
+      h2 Imágenes del Álbum #{album_id}
+      a.btn-primary(href=`/imagen/create?album_id=${album_id}`) Subir Nueva Imagen
+
+      if imagenes.length === 0
+        p Sin imágenes en este álbum.
+      else
+        .grid-imagenes
+          each img in imagenes
+            .card
+              img.card-img(src=img.url alt=img.descripcion)
+              .card-body
+                p.card-text #{img.descripcion}
+                a.btn-secondary(href=`/imagen/detail/${img.imagen_id}`) Ver Detalle
+                form.inline-form(action=`/imagen/delete/${img.imagen_id}` method="POST")
+                  button.btn-danger(type="submit") Eliminar
+
