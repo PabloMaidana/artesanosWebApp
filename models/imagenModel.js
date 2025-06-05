@@ -1,4 +1,4 @@
-// models/imagenModel.js
+
 const db = require('../config/db');
 
 const Imagen = {
