@@ -1,0 +1,129 @@
+
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Inicio – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+    script(src="/socket.io/socket.io.js")
+    script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+  body
+    .dashboard
+      // Header con nombre 
+      header.navbar
+        .navbar-left
+          a.profile-link(href="/usuario/perfil")
+            img.profile-thumb(src=user.url_imagen_perfil alt="Foto de perfil")
+            span.profile-name #{user.nombre} #{user.apellido}
+        .navbar-right
+          button#notifButton.notification-btn(type="button" onclick="toggleNotif()")
+            | 🔔
+            if notifCount > 0
+              span#notifCount.badge #{notifCount}
+
+      // Contenido principal dividido en sidebar y feed
+      .content
+        // Sidebar izquierdo
+        aside.sidebar
+          // Sección de perfil
+          .profile-section
+            a.profile-link-block(href="/usuario/perfil")
+              img.profile-img(src=user.url_imagen_perfil alt="Foto de perfil")
+              div
+                span.profile-name-lg #{user.nombre} #{user.apellido}
+          // Lista de amigos
+          .friends-section
+            h3 Amigos
+            if friends && friends.length
+              ul.friends-list
+                each f in friends
+                  li
+                    a.friend-link(href=`/usuario/perfil?usuario_id=${f.usuario_id}`) #{f.nombre} #{f.apellido}
+            else
+              p No tienes amigos aún.
+          // Crear álbum
+          .create-album
+            h3 Crear Álbum
+            form(action="/album/create" method="POST" class="form-create-album")
+              input(type="text" name="titulo" placeholder="Título del álbum" required)
+              button(type="submit") Crear
+          // Subir imagen
+          .upload-image
+            h3 Subir Imagen
+          
+            a.btn-upload(href="/imagen/create") Ir a subir imagen
+
+        // Feed central
+        main.feed
+          h2 Publicaciones
+          if posts && posts.length
+            each p in posts
+              .post
+                .post-header
+                  a.post-author(href=`/usuario/perfil?usuario_id=${p.usuario_id}`) #{p.autorNombre}
+                  span.post-date #{new Date(p.fecha).toLocaleString()}
+                if p.imagenUrl
+                  img.post-img(src=p.imagenUrl alt=p.descripcion)
+                if p.descripcion
+                  p.post-text #{p.descripcion}
+                
+                .post-actions
+                  
+                  button(type="button" class="btn-comment" data-post-id=p.postId onclick=`openCommentForm(${p.postId})`) Comentar
+                  a.btn-view-comments(href=`/publicaciones/${p.postId}#comentarios`) Ver comentarios
+          else
+            p No hay publicaciones de tus amigos.
+
+      // Panel de notificaciones (oculto por defecto)
+      .notification-panel#notifPanel.hidden
+        h3 Notificaciones
+        if notifications && notifications.length
+          ul.notif-list
+            each n in notifications
+              li.notif-item
+                a(href=n.enlace onclick=`markAsRead(${n.notificacion_id});`) #{n.mensaje}
+                br
+                small.text-muted #{new Date(n.fecha).toLocaleString()}
+        else
+          p No hay nuevas notificaciones.
+
+    // Scripts inline para manejar notificaciones y socket.io
+    script.
+      const socket = io();
+      // Registrar sala tras login
+      socket.emit('register_user', #{user.usuario_id});
+      // Actualizar contador al recibir nueva notificación
+      socket.on('nueva_notificacion', data => {
+        const badge = document.getElementById('notifCount');
+        let count = parseInt(badge?.textContent || '0', 10) + 1;
+        if (badge) badge.textContent = count;
+        else {
+          const btn = document.getElementById('notifButton');
+          const span = document.createElement('span');
+          span.id = 'notifCount';
+          span.className = 'badge';
+          span.textContent = count;
+          btn.appendChild(span);
+        }
+      });
+
+      function toggleNotif() {
+        const panel = document.getElementById('notifPanel');
+        panel.classList.toggle('hidden');
+      }
+
+      async function markAsRead(id) {
+        try {
+          await axios.post('/notificacion/read', { notificacion_id: id });
+         
+          location.reload();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function openCommentForm(postId) {
+ 
+        alert('Mostrar formulario de comentario para post ' + postId);
+      }

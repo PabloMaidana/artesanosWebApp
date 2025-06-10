@@ -7,7 +7,7 @@ const Usuario = {
     const [rows] = await db.query(
       `SELECT usuario_id, contrasena, nombre, apellido, intereses, url_imagen_perfil, email
        FROM usuario
-       WHERE email = ? AND estado = 1`,
+       WHERE email = ?`,
       [email]
     );
     return rows[0]; // Si no existe, devuelve undefined
@@ -18,7 +18,7 @@ const Usuario = {
     const [rows] = await db.query(
       `SELECT usuario_id, nombre, apellido, intereses, url_imagen_perfil, email, contrasena
        FROM usuario
-       WHERE usuario_id = ? AND estado = 1`,
+       WHERE usuario_id = ?`,
       [usuario_id]
     );
     return rows[0];
