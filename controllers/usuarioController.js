@@ -16,7 +16,7 @@ exports.login = async (req, res) => {
     // Guardar datos mínimos en sesión
     req.session.usuario_id = user.usuario_id;
     req.session.usuario_nombre = user.nombre;
-    res.redirect('/usuario/perfil');
+    res.redirect('/dashboard');
   } catch (err) {
     console.error(err);
     res.status(500).send('Error al iniciar sesión');

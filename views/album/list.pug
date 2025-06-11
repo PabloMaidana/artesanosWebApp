@@ -1,0 +1,38 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Mis Álbumes – Artesanos.com
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+  body
+    nav.navbar.navbar-light.bg-light
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        ul.navbar-nav.ms-auto.mb-0
+          li.nav-item
+            a.nav-link(href="/usuario/logout") Cerrar sesión
+
+    .container.mt-5
+      h2.mb-4 Mis Álbumes
+      a.btn.btn-primary.mb-3(href="/album/create") Nuevo Álbum
+      if albumes.length === 0
+        p No tienes álbumes aún.
+      else
+        table.table.table-striped
+          thead
+            tr
+              th ID
+              th Título
+              th Acciones
+          tbody
+            each a in albumes
+              tr
+                td #{a.album_id}
+                td #{a.titulo}
+                td
+                  a.btn.btn-secondary.btn-sm(href=`/imagen/list/${a.album_id}`) Ver imágenes
+                  form.d-inline(action=`/album/delete/${a.album_id}` method="POST")
+                    button.btn.btn-danger.btn-sm.ms-2(type="submit") Eliminar
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

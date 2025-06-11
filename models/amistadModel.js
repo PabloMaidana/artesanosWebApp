@@ -11,6 +11,26 @@ const Amistad = {
     );
   },
 
+  // Aceptar solicitud: cambiar estado a 'aceptado'
+  aceptarSolicitud: async (solicitanteId, destinatarioId) => {
+    await db.query(
+      `UPDATE amistad
+         SET estado = 'aceptado'
+       WHERE solicitante_id = ? AND destinatario_id = ?`,
+      [solicitanteId, destinatarioId]
+    );
+  },
+
+  // Rechazar solicitud: eliminar o marcar como 'rechazado'
+  rechazarSolicitud: async (solicitanteId, destinatarioId) => {
+    // Puedes eliminar o actualizar estado = 'rechazado'
+    await db.query(
+      `DELETE FROM amistad
+       WHERE solicitante_id = ? AND destinatario_id = ?`,
+      [solicitanteId, destinatarioId]
+    );
+  },
+
   // Listar solicitudes pendientes que he recibido
   findSolicitudesRecibidas: async (usuario_id) => {
     const [rows] = await db.query(
@@ -24,18 +44,7 @@ const Amistad = {
     return rows;
   },
 
-  // Cambiar estado de una solicitud a 'aceptado' o 'rechazado'
-  updateEstado: async ({ solicitante_id, destinatario_id, estado }) => {
-    await db.query(
-      `UPDATE amistad
-          SET estado = ?
-        WHERE solicitante_id = ?
-          AND destinatario_id = ?`,
-      [estado, solicitante_id, destinatario_id]
-    );
-  },
-
-  // Listar amigos (estado = 'aceptado') de un usuario
+  // listar amigos (estado = 'aceptado') de un usuario
   findAmigosDe: async (usuario_id) => {
     const [rows] = await db.query(
       `SELECT u.usuario_id, u.nombre, u.apellido
@@ -47,7 +56,20 @@ const Amistad = {
       [usuario_id, usuario_id]
     );
     return rows;
+  },
+
+  findSolicitudesEnviadas: async (usuario_id) => {
+  const [rows] = await db.query(
+    `SELECT destinatario_id, fecha
+       FROM amistad
+      WHERE solicitante_id = ? AND estado = 'pendiente'`,
+    [usuario_id]
+  );
+  return rows; // { destinatario_id, fecha }
   }
+  
+
+  
 };
 
 module.exports = Amistad;

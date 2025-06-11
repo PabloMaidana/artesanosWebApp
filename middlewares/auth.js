@@ -12,5 +12,5 @@ exports.isLoggedOut = (req, res, next) => {
   if (!req.session || !req.session.usuario_id) {
     return next();
   }
-  res.redirect('/usuario/perfil');
+  res.redirect('/dashboard');
 };

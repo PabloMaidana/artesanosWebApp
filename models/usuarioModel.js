@@ -32,7 +32,54 @@ const Usuario = {
        WHERE usuario_id = ?`,
       [nuevaContrasena, usuario_id]
     );
+  },
+
+  // Buscar usuarios por término en nombre o apellido, excluyendo al propio usuario
+  searchByNameExact: async (term, excludeUsuarioId) => {
+    // Usamos LOWER para comparación case-insensitive
+    const [rows] = await db.query(
+      `SELECT usuario_id, nombre, apellido, url_imagen_perfil
+         FROM usuario
+        WHERE (LOWER(nombre) = LOWER(?) OR LOWER(apellido) = LOWER(?))
+          AND usuario_id <> ?`,
+      [term, term, excludeUsuarioId]
+    );
+    return rows;
+  },
+
+   searchByName: async (term, excludeUsuarioId) => {
+    term = term.trim();
+    if (!term) return [];
+
+    const parts = term.split(/\s+/);
+    let sql, params;
+    if (parts.length >= 2) {
+      sql = `
+        SELECT usuario_id, nombre, apellido, url_imagen_perfil
+          FROM usuario
+         WHERE (
+                 LOWER(CONCAT(nombre, ' ', apellido)) = LOWER(?)
+                 OR LOWER(CONCAT(apellido, ' ', nombre)) = LOWER(?)
+               )
+           AND usuario_id <> ?
+      `;
+      params = [term, term, excludeUsuarioId];
+    } else {
+      sql = `
+        SELECT usuario_id, nombre, apellido, url_imagen_perfil
+          FROM usuario
+         WHERE (LOWER(nombre) = LOWER(?) OR LOWER(apellido) = LOWER(?))
+           AND usuario_id <> ?
+      `;
+      params = [term, term, excludeUsuarioId];
+    }
+
+    const [rows] = await db.query(sql, params);
+    return rows;
   }
+
+
+
 };
 
 module.exports = Usuario;

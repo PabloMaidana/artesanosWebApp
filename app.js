@@ -53,6 +53,7 @@ const imagenRoutes = require('./routes/imagenRoutes');
 const comentarioRoutes = require('./routes/comentarioRoutes');
 const tagRoutes = require('./routes/tagRoutes');
 const notificacionRoutes = require('./routes/notificacionRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // armar rutas en sus prefijos
 app.use('/usuario', usuarioRoutes);
@@ -62,12 +63,18 @@ app.use('/imagen', imagenRoutes);
 app.use('/comentario', comentarioRoutes);
 app.use('/tag', tagRoutes);
 app.use('/notificacion', notificacionRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // ruta raíz, redirige según sesión
 app.get('/', (req, res) => {
   if (req.session.usuario_id) {
-    return res.redirect('/usuario/perfil');
+    return res.redirect('/dashboard');
   }
+  res.redirect('/usuario/login');
+});
+
+app.get('/', (req, res) => {
+  if (req.session.usuario_id) return res.redirect('/dashboard');
   res.redirect('/usuario/login');
 });
 

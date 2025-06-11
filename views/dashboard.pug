@@ -1,129 +1,264 @@
-
+// views/dashboard.pug
 doctype html
 html
   head
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1")
-    title Inicio – Artesanos.com
+    title Dashboard – Artesanos.com
     link(rel="stylesheet" href="/public/css/main.css")
     script(src="/socket.io/socket.io.js")
     script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
   body
-    .dashboard
-      // Header con nombre 
-      header.navbar
-        .navbar-left
+    .dashboard-container
+      // Header con nombre y campanita
+      header.dashboard-header
+        .left
           a.profile-link(href="/usuario/perfil")
-            img.profile-thumb(src=user.url_imagen_perfil alt="Foto de perfil")
+            if user.url_imagen_perfil
+              img.profile-thumb(src=user.url_imagen_perfil alt="Foto")
+            else
+              
+              img.profile-thumb(src="/public/images/default-profile.png" alt="Foto")
             span.profile-name #{user.nombre} #{user.apellido}
-        .navbar-right
-          button#notifButton.notification-btn(type="button" onclick="toggleNotif()")
+        .right
+          button#notifButton.notification-btn(type="button")
             | 🔔
             if notifCount > 0
               span#notifCount.badge #{notifCount}
 
-      // Contenido principal dividido en sidebar y feed
-      .content
-        // Sidebar izquierdo
-        aside.sidebar
-          // Sección de perfil
-          .profile-section
-            a.profile-link-block(href="/usuario/perfil")
-              img.profile-img(src=user.url_imagen_perfil alt="Foto de perfil")
-              div
-                span.profile-name-lg #{user.nombre} #{user.apellido}
-          // Lista de amigos
-          .friends-section
-            h3 Amigos
-            if friends && friends.length
+      // Contenedor principal: pestañas + contenido
+      .dashboard-main
+        // Pestañas
+        nav.tabs
+          // Usamos activeTab para asignar clase 'active'
+          - var at = typeof activeTab !== 'undefined' ? activeTab : 'tab-friends-albums'
+          button.tab-button(class= at === 'tab-friends-albums' ? 'active' : '' data-tab="tab-friends-albums") Álbumes de amigos
+          button.tab-button(class= at === 'tab-my-albums' ? 'active' : '' data-tab="tab-my-albums") Mis álbumes
+          button.tab-button(class= at === 'tab-share' ? 'active' : '' data-tab="tab-share") Compartir
+          button.tab-button(class= at === 'tab-search' ? 'active' : '' data-tab="tab-search") Buscar personas
+
+        // Contenido de pestañas
+        .tabs-content
+          // 1) Álbumes de amigos
+          section#tab-friends-albums.tab-content(class= at === 'tab-friends-albums' ? 'active' : '')
+            h2 Álbumes de amigos
+            if friends.length === 0
+              p Aún no tienes amigos.
+            else
               ul.friends-list
                 each f in friends
                   li
-                    a.friend-link(href=`/usuario/perfil?usuario_id=${f.usuario_id}`) #{f.nombre} #{f.apellido}
-            else
-              p No tienes amigos aún.
-          // Crear álbum
-          .create-album
-            h3 Crear Álbum
-            form(action="/album/create" method="POST" class="form-create-album")
+                    button.friend-item(data-friend-id=f.usuario_id) #{f.nombre} #{f.apellido}
+              .friend-albums-container
+                p Selecciona un amigo para ver sus álbumes.
+
+          // 2) Mis álbumes
+          section#tab-my-albums.tab-content(class= at === 'tab-my-albums' ? 'active' : '')
+            h2 Mis Álbumes
+            form#create-album-form(action="/album/create" method="POST" class="form-inline")
               input(type="text" name="titulo" placeholder="Título del álbum" required)
               button(type="submit") Crear
-          // Subir imagen
-          .upload-image
-            h3 Subir Imagen
-          
-            a.btn-upload(href="/imagen/create") Ir a subir imagen
+            hr
+            if myAlbums.length === 0
+              p No tienes álbumes aún.
+            else
+              ul.my-albums-list
+                each a in myAlbums
+                  li
+                    a(href=`/imagen/list/${a.album_id}`) #{a.titulo} (#{a.album_id})
+            .upload-link
+              a.btn(href="/imagen/create") Subir imagen
 
-        // Feed central
-        main.feed
-          h2 Publicaciones
-          if posts && posts.length
-            each p in posts
-              .post
-                .post-header
-                  a.post-author(href=`/usuario/perfil?usuario_id=${p.usuario_id}`) #{p.autorNombre}
-                  span.post-date #{new Date(p.fecha).toLocaleString()}
-                if p.imagenUrl
-                  img.post-img(src=p.imagenUrl alt=p.descripcion)
-                if p.descripcion
-                  p.post-text #{p.descripcion}
-                
-                .post-actions
-                  
-                  button(type="button" class="btn-comment" data-post-id=p.postId onclick=`openCommentForm(${p.postId})`) Comentar
-                  a.btn-view-comments(href=`/publicaciones/${p.postId}#comentarios`) Ver comentarios
-          else
-            p No hay publicaciones de tus amigos.
+          // 3) Compartir
+          section#tab-share.tab-content(class= at === 'tab-share' ? 'active' : '')
+            h2 Compartir imágenes con solicitantes
+            if pendingRequests.length === 0
+              p No tienes solicitudes pendientes.
+            else
+              ul.requests-list
+                each pReq in pendingRequests
+                  li
+                    // Botón para seleccionar solicitante
+                    button.request-item(type="button" data-solicitante-id=pReq.solicitante_id)
+                      | #{pReq.nombre} #{pReq.apellido} (solicitado el #{new Date(pReq.fecha).toLocaleDateString()})
+              .share-images-container
+                p Selecciona una solicitud para compartir imágenes.
 
-      // Panel de notificaciones (oculto por defecto)
+          // 4) Buscar personas
+          section#tab-search.tab-content(class= at === 'tab-search' ? 'active' : '')
+            h2 Buscar personas
+            form#search-form(action="/dashboard/search" method="GET" class="form-inline")
+              input(type="text" name="term" placeholder="Nombre o apellido" value=(typeof searchTerm !== 'undefined' ? searchTerm : ''))
+              button(type="submit") Buscar
+
+            // Mostrar mensajes según estado:
+            if typeof emptySearch !== 'undefined' && emptySearch
+              // El usuario buscó con término vacío
+              p.alert-error Debes ingresar un nombre o apellido para buscar.
+            else if typeof searchResults !== 'undefined'
+              
+              if searchResults.length === 0
+                p No se encontraron usuarios para "#{searchTerm}".
+              else
+                ul.search-results
+                  each u in searchResults
+                    li
+                      span #{u.nombre} #{u.apellido}
+                      if u.isFriend
+                        span.status Amigo
+                      else if u.pendingReceived
+                        span.status Te envió solicitud
+                      else if u.pendingSent
+                        span.status Solicitud enviada
+                      else
+                        form(action="/amistad/solicitud/send" method="POST" class="form-inline inline-form")
+                          input(type="hidden" name="destinatario_id" value=u.usuario_id)
+                          button(type="submit") Enviar solicitud
+                          
+      // Panel de notificaciones flotante
       .notification-panel#notifPanel.hidden
         h3 Notificaciones
-        if notifications && notifications.length
+        if notifications.length > 0
           ul.notif-list
             each n in notifications
               li.notif-item
-                a(href=n.enlace onclick=`markAsRead(${n.notificacion_id});`) #{n.mensaje}
+                a(href=n.enlace onclick=`markAsRead(${n.notificacion_id}); return false;`) #{n.mensaje}
                 br
                 small.text-muted #{new Date(n.fecha).toLocaleString()}
         else
-          p No hay nuevas notificaciones.
+          p Sin nuevas notificaciones.
 
-    // Scripts inline para manejar notificaciones y socket.io
+    
     script.
-      const socket = io();
-      // Registrar sala tras login
-      socket.emit('register_user', #{user.usuario_id});
-      // Actualizar contador al recibir nueva notificación
-      socket.on('nueva_notificacion', data => {
-        const badge = document.getElementById('notifCount');
-        let count = parseInt(badge?.textContent || '0', 10) + 1;
-        if (badge) badge.textContent = count;
-        else {
-          const btn = document.getElementById('notifButton');
-          const span = document.createElement('span');
-          span.id = 'notifCount';
-          span.className = 'badge';
-          span.textContent = count;
-          btn.appendChild(span);
+      window.myImagesCache = !{JSON.stringify(myImages)};
+
+    
+    script.
+      document.addEventListener('DOMContentLoaded', () => {
+        // Notificaciones en tiempo real (socket.io)
+        if (typeof io !== 'undefined') {
+          const socket = io();
+          socket.emit('register_user', #{user.usuario_id});
+          socket.on('nueva_notificacion', data => {
+            const badge = document.getElementById('notifCount');
+            let count = parseInt(badge?.textContent || '0', 10) + 1;
+            if (badge) {
+              badge.textContent = count;
+            } else {
+              const btn = document.getElementById('notifButton');
+              const span = document.createElement('span');
+              span.id = 'notifCount';
+              span.className = 'badge';
+              span.textContent = count;
+              btn.appendChild(span);
+            }
+          });
         }
-      });
 
-      function toggleNotif() {
-        const panel = document.getElementById('notifPanel');
-        panel.classList.toggle('hidden');
-      }
+        // Manejo pestañas
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-tab');
+            const section = document.getElementById(targetId);
+            if (section) section.classList.add('active');
+          });
+        });
 
-      async function markAsRead(id) {
-        try {
-          await axios.post('/notificacion/read', { notificacion_id: id });
-         
-          location.reload();
-        } catch (err) {
-          console.error(err);
+        // Manejo campanita
+        const notifButton = document.getElementById('notifButton');
+        const notifPanel = document.getElementById('notifPanel');
+        if (notifButton && notifPanel) {
+          notifButton.addEventListener('click', () => {
+            notifPanel.classList.toggle('hidden');
+          });
         }
-      }
 
-      function openCommentForm(postId) {
- 
-        alert('Mostrar formulario de comentario para post ' + postId);
-      }
+        // Álbumes de amigos: cargar álbumes vía AJAX al hacer clic
+        document.querySelectorAll('.friend-item').forEach(button => {
+          button.addEventListener('click', async () => {
+            const friendId = button.getAttribute('data-friend-id');
+            const container = document.querySelector('.friend-albums-container');
+            container.innerHTML = 'Cargando álbumes...';
+            try {
+              const resp = await axios.get(`/dashboard/friend-albums/${friendId}`);
+              if (!resp.data.albums || resp.data.albums.length === 0) {
+                container.innerHTML = '<p>Este amigo no tiene álbumes o no compartió imágenes.</p>';
+              } else {
+                const ul = document.createElement('ul');
+                ul.className = 'friend-albums-list';
+                resp.data.albums.forEach(a => {
+                  const li = document.createElement('li');
+                  const link = document.createElement('a');
+                  link.href = `/imagen/list/${a.album_id}`;
+                  link.textContent = `${a.titulo} (${a.imageCount})`;
+                  li.appendChild(link);
+                  ul.appendChild(li);
+                });
+                container.innerHTML = '';
+                container.appendChild(ul);
+              }
+            } catch (err) {
+              console.error(err);
+              container.innerHTML = '<p>Error al cargar álbumes.</p>';
+            }
+          });
+        });
+
+        // Compartir imágenes: mostrar form con checkboxes
+        document.querySelectorAll('.request-item').forEach(button => {
+          button.addEventListener('click', () => {
+            const solicitanteId = button.getAttribute('data-solicitante-id');
+            const container = document.querySelector('.share-images-container');
+            const images = window.myImagesCache || [];
+            if (!images || images.length === 0) {
+              container.innerHTML = '<p>Error: no hay imágenes cargadas.</p>';
+              return;
+            }
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/dashboard/share';
+            form.className = 'form-share-images';
+            const inpSolic = document.createElement('input');
+            inpSolic.type = 'hidden';
+            inpSolic.name = 'solicitante_id';
+            inpSolic.value = solicitanteId;
+            form.appendChild(inpSolic);
+            const ul = document.createElement('ul');
+            ul.className = 'share-images-list';
+            images.forEach(img => {
+              const li = document.createElement('li');
+              const label = document.createElement('label');
+              const chk = document.createElement('input');
+              chk.type = 'checkbox';
+              chk.name = 'imageIds';
+              chk.value = img.imagen_id;
+              label.appendChild(chk);
+              const span = document.createElement('span');
+              span.textContent = ` ${img.descripcion || img.url}`;
+              label.appendChild(span);
+              if (img.url) {
+                const thumb = document.createElement('img');
+                thumb.src = img.url;
+                thumb.alt = img.descripcion || '';
+                thumb.className = 'share-thumb';
+                li.appendChild(thumb);
+              }
+              li.appendChild(label);
+              ul.appendChild(li);
+            });
+            form.appendChild(ul);
+            const btnSubmit = document.createElement('button');
+            btnSubmit.type = 'submit';
+            btnSubmit.textContent = 'Compartir seleccionadas';
+            form.appendChild(btnSubmit);
+            container.innerHTML = '';
+            container.appendChild(form);
+          });
+        });
+
+      }); 
