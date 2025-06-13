@@ -36,7 +36,6 @@ const Usuario = {
 
   // Buscar usuarios por término en nombre o apellido, excluyendo al propio usuario
   searchByNameExact: async (term, excludeUsuarioId) => {
-    // Usamos LOWER para comparación case-insensitive
     const [rows] = await db.query(
       `SELECT usuario_id, nombre, apellido, url_imagen_perfil
          FROM usuario
@@ -76,9 +75,40 @@ const Usuario = {
 
     const [rows] = await db.query(sql, params);
     return rows;
+  },
+
+  searchByNameFlexible: async (term, excludeUsuarioId) => {
+    term = term.trim();
+    if (!term) return [];
+
+    const parts = term.split(/\s+/);
+    let sql, params;
+    if (parts.length >= 2) {
+      // Nombre completo exacto (o apellido+nombre)
+      sql = `
+        SELECT usuario_id, nombre, apellido, url_imagen_perfil
+          FROM usuario
+         WHERE (
+                 LOWER(CONCAT(nombre, ' ', apellido)) = LOWER(?)
+                 OR LOWER(CONCAT(apellido, ' ', nombre)) = LOWER(?)
+               )
+           AND usuario_id <> ?
+      `;
+      params = [term, term, excludeUsuarioId];
+    } else {
+      // Una sola palabra: nombre exacto o apellido exacto
+      sql = `
+        SELECT usuario_id, nombre, apellido, url_imagen_perfil
+          FROM usuario
+         WHERE (LOWER(nombre) = LOWER(?) OR LOWER(apellido) = LOWER(?))
+           AND usuario_id <> ?
+      `;
+      params = [term, term, excludeUsuarioId];
+    }
+
+    const [rows] = await db.query(sql, params);
+    return rows;
   }
-
-
 
 };
 

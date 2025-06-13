@@ -10,6 +10,9 @@ exports.sendRequest = async (req, res) => {
     const solicitante_id = req.session.usuario_id;
     const destinatario_id = parseInt(req.body.destinatario_id, 10);
 
+    // Obtener término de búsqueda enviado en el form
+    const term = (req.body.term || '').trim();
+
     // 1) Insertar la solicitud
     await Amistad.create({ solicitante_id, destinatario_id });
 
@@ -26,7 +29,14 @@ exports.sendRequest = async (req, res) => {
       mensaje: `Tienes una nueva solicitud de ${req.session.usuario_nombre}`
     });
 
-    res.redirect('/amistad/solicitudes');
+    // 4) Redirigir a la ruta de búsqueda con el mismo término para mantener la pestaña activa y resultados
+    if (term) {
+      // Redirige a la ruta GET de búsqueda
+      return res.redirect(`/dashboard/search?term=${encodeURIComponent(term)}`);
+    } else {
+      
+      return res.redirect('/dashboard?tab=tab-search');
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al enviar solicitud de amistad');
@@ -37,7 +47,7 @@ exports.listReceived = async (req, res) => {
   try {
     const usuario_id = req.session.usuario_id;
     const solicitudes = await Amistad.findSolicitudesRecibidas(usuario_id);
-    res.render('amistad/solicitudes', { solicitudes });
+    res.render('/dashboard?tab=tab-search', { solicitudes });
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al listar solicitudes de amistad');
@@ -57,23 +67,13 @@ exports.respondRequest = async (req, res) => {
     if (respuesta === 'aceptado') {
       const userAcepta = await Usuario.findById(destinatario_id);
       const nuevoTitulo = `${userAcepta.nombre} ${userAcepta.apellido}`;
-
-      // Crear álbum en perfil del solicitante
-      const album_id = await Album.create({ usuario_id: solicitante_id, titulo: nuevoTitulo });
-
-      // Copiar imágenes del usuario que aceptó
-      const imagenesUsuarioAcepta = await Imagen.findAllByUser(destinatario_id);
-      for (let img of imagenesUsuarioAcepta) {
-        const newImgId = await Imagen.create({
-          album_id,
-          url: img.url,
-          descripcion: img.descripcion
+      // Solo creamos álbum en solicitante:
+      if (typeof Album.createSharedAlbum === 'function') {
+        await Album.createSharedAlbum({
+          solicitanteId: solicitante_id,
+          aceptador: userAcepta
         });
-        // Copiar tags de la imagen original
-        const tags = await ImagenTag.findByImage(img.imagen_id);
-        for (let t of tags) {
-          await ImagenTag.create({ imagen_id: newImgId, tag_id: t.tag_id });
-        }
+      } else {
       }
     }
 

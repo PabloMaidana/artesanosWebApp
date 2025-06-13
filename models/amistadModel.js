@@ -45,17 +45,28 @@ const Amistad = {
   },
 
   // listar amigos (estado = 'aceptado') de un usuario
-  findAmigosDe: async (usuario_id) => {
+  findAmigosQueMeComparten: async (usuario_id) => {
+    // filas donde solicitante_id = usuario_id y estado = 'aceptado'
     const [rows] = await db.query(
-      `SELECT u.usuario_id, u.nombre, u.apellido
+      `SELECT a.destinatario_id AS usuario_id, u.nombre, u.apellido
          FROM amistad a
-         JOIN usuario u
-           ON ( (a.solicitante_id = u.usuario_id AND a.destinatario_id = ?)
-              OR (a.destinatario_id = u.usuario_id AND a.solicitante_id = ?) )
-        WHERE a.estado = 'aceptado'`,
-      [usuario_id, usuario_id]
+         JOIN usuario u ON u.usuario_id = a.destinatario_id
+        WHERE a.solicitante_id = ? AND a.estado = 'aceptado'`,
+      [usuario_id]
     );
-    return rows;
+    return rows; // usuarios cuyos contenidos puedo ver
+  },
+
+  findMisAceptaciones: async (usuario_id) => {
+    // filas donde destinatario_id = usuario_id y estado = 'aceptado'
+    const [rows] = await db.query(
+      `SELECT a.solicitante_id AS usuario_id, u.nombre, u.apellido
+         FROM amistad a
+         JOIN usuario u ON u.usuario_id = a.solicitante_id
+        WHERE a.destinatario_id = ? AND a.estado = 'aceptado'`,
+      [usuario_id]
+    );
+    return rows; // usuarios que me enviaron solicitud que acepté
   },
 
   findSolicitudesEnviadas: async (usuario_id) => {
@@ -67,8 +78,6 @@ const Amistad = {
   );
   return rows; // { destinatario_id, fecha }
   }
-  
-
   
 };
 

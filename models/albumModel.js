@@ -5,13 +5,12 @@ const Album = {
   // Listar todos los álbumes activos de un usuario
   findAllByUser: async (usuario_id) => {
     const [rows] = await db.query(
-      `SELECT * 
-         FROM album 
-        WHERE usuario_id = ? 
-          AND estado = 1`,
+      `SELECT album_id, titulo, compartido_por_usuarioid
+         FROM album
+        WHERE usuario_id = ?`,
       [usuario_id]
     );
-    return rows;
+    return rows; // cada fila: { album_id, titulo, compartido_por_usuarioid }
   },
 
   // Crear un nuevo álbum
@@ -25,8 +24,6 @@ const Album = {
   },
 
   createSharedAlbum: async ({ solicitanteId, aceptador }) => {
-    // solicitanteId: usuario que envió la solicitud (dueño del nuevo álbum)
-    // aceptador: objeto { usuario_id, nombre, apellido, ... } de quien acepta
     const titulo = `${aceptador.nombre} ${aceptador.apellido}`;
     const [result] = await db.query(
       `INSERT INTO album (usuario_id, titulo, compartido_por_usuarioid) VALUES (?, ?, ?)`,

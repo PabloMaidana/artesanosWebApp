@@ -1,3 +1,4 @@
+
 doctype html
 html
   head
@@ -14,10 +15,11 @@ html
             a.nav-link(href="/usuario/logout") Cerrar sesión
 
     .container.mt-5
+      // Sección Álbumes Propios
       h2.mb-4 Mis Álbumes
       a.btn.btn-primary.mb-3(href="/album/create") Nuevo Álbum
-      if albumes.length === 0
-        p No tienes álbumes aún.
+      if albumesPropios.length === 0
+        p No tienes álbumes propios aún.
       else
         table.table.table-striped
           thead
@@ -26,7 +28,7 @@ html
               th Título
               th Acciones
           tbody
-            each a in albumes
+            each a in albumesPropios
               tr
                 td #{a.album_id}
                 td #{a.titulo}
@@ -35,4 +37,24 @@ html
                   form.d-inline(action=`/album/delete/${a.album_id}` method="POST")
                     button.btn.btn-danger.btn-sm.ms-2(type="submit") Eliminar
 
-    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+      // Sección Álbumes Compartidos Contigo
+      h3.mt-5 Álbumes compartidos contigo
+      if albumesCompartidos.length === 0
+        p No tienes álbumes compartidos por otros usuarios.
+      else
+        table.table.table-striped
+          thead
+            tr
+              th ID
+              th Título
+              th Compartido por
+              th Acciones
+          tbody
+            each a in albumesCompartidos
+              tr
+                td #{a.album_id}
+                td #{a.titulo}
+                td #{a.compartido_por_nombre} #{a.compartido_por_apellido}
+                td
+                  a.btn.btn-secondary.btn-sm(href=`/imagen/list/${a.album_id}`) Ver imágenes
+

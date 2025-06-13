@@ -1,0 +1,36 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Subir Imagen – Artesanos.com
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        a.nav-link(href="/usuario/logout") Cerrar sesión
+
+    main.container
+      block content
+        h2 Agregar imágenes a álbum "#{album.titulo}"
+        form(action="/imagen/add-to-shared" method="POST")
+            input(type="hidden" name="album_id" value=album.album_id)
+            if myImages.length === 0
+            p No tienes imágenes en tus otros álbumes para copiar.
+            else
+            ul
+                each img in myImages
+                li
+                    label
+                    input(type="checkbox" name="imageIds" value=img.imagen_id)
+                    |  #{img.descripcion || img.url}
+            button(type="submit") Agregar seleccionadas
+        hr
+        // Formulario opcional para subir nueva imagen directamente:
+        h3 Subir nueva imagen a este álbum
+        form(action="/imagen/create" method="POST")
+            input(type="hidden" name="album_id" value=album.album_id)
+            input(type="text" name="url" placeholder="URL de la imagen" required)
+            input(type="text" name="descripcion" placeholder="Descripción">
+            button(type="submit") Subir imagen

@@ -11,6 +11,8 @@ router.get('/friend-albums/:friendId', isLoggedIn, dashboardCtrl.getFriendAlbums
 
 // Compartir imágenes con solicitante (envía form desde pestaña Compartir)
 router.post('/share', isLoggedIn, dashboardCtrl.shareImagesWithRequester);
+router.post('/accept-request', isLoggedIn, dashboardCtrl.acceptRequest);
+router.post('/reject-request', isLoggedIn, dashboardCtrl.rejectRequest);
 // espera body: { solicitante_id, imageIds: [ ... ] }
 
 // Búsqueda de usuarios
