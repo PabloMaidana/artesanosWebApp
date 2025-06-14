@@ -56,34 +56,49 @@ exports.showDashboard = async (req, res) => {
   Endpoint para obtener álbumes de un amigo vía AJAX.
   Devuelve JSON con los álbumes de friendId.
  */
-exports.getFriendAlbums = async (req, res) => {
+exports.getSharedContentFromFriend = async (req, res) => {
   try {
     const usuario_id = req.session.usuario_id;
     const friendId = parseInt(req.params.friendId, 10);
-    // Verificar que friendId efectivamente comparte, existe fila con solicitante_id = usuario_id y destinatario_id = friendId aceptada
-    const amigos = await Amistad.findAmigosQueMeComparten(usuario_id);
-    const isFriend = amigos.some(f => f.usuario_id === friendId);
-    if (!isFriend) {
-      return res.status(403).json({ error: 'No autorizado' });
+    if (isNaN(friendId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
     }
-    // Obtener álbumes de friendId
-    const friendAlbums = await Album.findAllByUser(friendId);
-    // Filtrar solo álbumes propios de friendId (compartido_por_usuarioid null)
+
+    // Verificar que friendId realmente me comparte (es decir: existe relación aceptada A→B)
+    // Para el solicitante A: hay una fila en amistad con solicitante_id = A y destinatario_id = friendId y estado = 'aceptado'.
+    const amigosQueMeComparten = await Amistad.findAmigosQueMeComparten(usuario_id);
+    const compartidoresIds = amigosQueMeComparten.map(f => f.usuario_id);
+    if (!compartidoresIds.includes(friendId)) {
+      return res.status(403).json({ error: 'No autorizado: no existe compartición de ese usuario hacia ti' });
+    }
+
+    // Buscar el/los álbum(es) creados para mí por friendId
+    const sharedAlbums = await Album.findSharedAlbumsToUser(usuario_id, friendId);
+    if (sharedAlbums.length === 0) {
+      return res.json({ albums: [] });
+    }
+
+    // Para cada álbum compartido, obtener sus imágenes
     const result = [];
-    for (let alb of friendAlbums) {
-      if (alb.compartido_por_usuarioid == null) {
-        const imgs = await Imagen.findAllByAlbum(alb.album_id);
-        result.push({
-          album_id: alb.album_id,
-          titulo: alb.titulo,
-          imageCount: imgs.length
-        });
-      }
+    for (let alb of sharedAlbums) {
+      // alb: { album_id, titulo, compartido_por_usuarioid }
+      const images = await Imagen.findAllByAlbum(alb.album_id);
+
+      result.push({
+        album_id: alb.album_id,
+        titulo: alb.titulo,
+        images: images.map(img => ({
+          imagen_id: img.imagen_id,
+          url: img.url,
+          descripcion: img.descripcion
+        }))
+      });
     }
-    res.json({ albums: result });
+
+    return res.json({ albums: result });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error al obtener álbumes de amigo' });
+    return res.status(500).json({ error: 'Error al obtener contenido compartido' });
   }
 };
 

@@ -17,7 +17,6 @@ html
             if user.url_imagen_perfil
               img.profile-thumb(src=user.url_imagen_perfil alt="Foto")
             else
-              
               img.profile-thumb(src="/public/images/default-profile.png" alt="Foto")
             span.profile-name #{user.nombre} #{user.apellido}
         .right
@@ -30,27 +29,27 @@ html
       .dashboard-main
         // pestañas
         nav.tabs
-          // activeTab para asignar clase 'active'
           - var at = typeof activeTab !== 'undefined' ? activeTab : 'tab-friends-albums'
-          button.tab-button(class= at === 'tab-friends-albums' ? 'active' : '' data-tab="tab-friends-albums") Álbumes de amigos
+          button.tab-button(class= at === 'tab-friends-albums' ? 'active' : '' data-tab="tab-friends-albums") Contenido compartido
           button.tab-button(class= at === 'tab-my-albums' ? 'active' : '' data-tab="tab-my-albums") Mis álbumes
           button.tab-button(class= at === 'tab-share' ? 'active' : '' data-tab="tab-share") Compartir
           button.tab-button(class= at === 'tab-search' ? 'active' : '' data-tab="tab-search") Buscar personas
 
         // Contenido de pestañas
         .tabs-content
-          // 1) Álbumes de amigos
+          // 1) Contenido compartido 
           section#tab-friends-albums.tab-content(class= at === 'tab-friends-albums' ? 'active' : '')
-            h2 Álbumes de amigos
+            h2 Contenido compartido de amigos
             if friends.length === 0
-              p Aún no tienes amigos.
+              p Aún no tienes amigos que compartan contenido contigo.
             else
               ul.friends-list
                 each f in friends
                   li
-                    button.friend-item(data-friend-id=f.usuario_id) #{f.nombre} #{f.apellido}
+                    // Botón para cargar contenido compartido de este amigo
+                    button.friend-item(type="button" data-friend-id=f.usuario_id)= `${f.nombre} ${f.apellido}`
               .friend-albums-container
-                p Selecciona un amigo para ver sus álbumes.
+                p Selecciona un amigo para ver el contenido que compartió contigo.
 
           // 2) Mis álbumes
           section#tab-my-albums.tab-content(class= at === 'tab-my-albums' ? 'active' : '')
@@ -67,42 +66,40 @@ html
                   li
                     a(href=`/imagen/list/${a.album_id}`) #{a.titulo} (#{a.album_id})
             .upload-link
-              a.btn(href="/imagen/create") Subir imagen
+              a.btn(href=`/imagen/create/${myAlbums.length>0 ? myAlbums[0].album_id : ''}`) Subir imagen
 
           // 3) Compartir
-          section#tab-share.tab-content(class= activeTab === 'tab-share' ? 'active' : '')
-          h2 Solicitudes de amistad
+          section#tab-share.tab-content(class= at === 'tab-share' ? 'active' : '')
+            h2 Solicitudes de amistad
+            // Solicitudes pendientes
+            if pendingRequests.length === 0
+              p No tienes solicitudes pendientes.
+            else
+              ul.requests-list
+                each reqItem in pendingRequests
+                  li
+                    span #{reqItem.nombre} #{reqItem.apellido}
+                    form(action="/dashboard/accept-request" method="POST" style="display:inline;")
+                      input(type="hidden" name="solicitante_id" value=reqItem.solicitante_id)
+                      button(type="submit") Aceptar
+                    form(action="/dashboard/reject-request" method="POST" style="display:inline; margin-left:0.5rem;")
+                      input(type="hidden" name="solicitante_id" value=reqItem.solicitante_id)
+                      button(type="submit") Rechazar
 
-          // Solicitudes pendientes
-          if pendingRequests.length === 0
-            p No tienes solicitudes pendientes.
-          else
-            ul.requests-list
-              each reqItem in pendingRequests
-                li
-                  span #{reqItem.nombre} #{reqItem.apellido}
-                  form(action="/dashboard/accept-request" method="POST" style="display:inline;")
-                    input(type="hidden" name="solicitante_id" value=reqItem.solicitante_id)
-                    button(type="submit") Aceptar
-                  form(action="/dashboard/reject-request" method="POST" style="display:inline; margin-left:0.5rem;")
-                    input(type="hidden" name="solicitante_id" value=reqItem.solicitante_id)
-                    button(type="submit") Rechazar
-
-          // Álbumes compartidos ya creados por este usuario (aceptador)
-          if sharedAlbumsForAceptor && sharedAlbumsForAceptor.length > 0
-            hr
-            h3 Álbumes compartidos creados
-            ul.shared-albums-list
-              each alb in sharedAlbumsForAceptor
-                li
-                  span #{alb.titulo} (para #{alb.solicitante_nombre} #{alb.solicitante_apellido})
-                  a.btn(href=`/imagen/add-to-shared/${alb.album_id}`) Agregar/Ver imágenes
-          else
-            // Si no hay aún álbumes creados
-            p No has creado álbumes compartidos hasta ahora.
+            // Álbumes compartidos creados por este usuario (aceptador)
+            if sharedAlbumsForAceptor && sharedAlbumsForAceptor.length > 0
+              hr
+              h3 Álbumes compartidos creados
+              ul.shared-albums-list
+                each alb in sharedAlbumsForAceptor
+                  li
+                    span #{alb.titulo} (para #{alb.solicitante_nombre} #{alb.solicitante_apellido})
+                    a.btn(href=`/imagen/add-to-shared/${alb.album_id}`) Agregar/Ver imágenes
+            else
+              p No has creado álbumes compartidos hasta ahora.
 
           // 4) Buscar personas
-          section#tab-search.tab-content(class= activeTab === 'tab-search' ? 'active' : '')
+          section#tab-search.tab-content(class= at === 'tab-search' ? 'active' : '')
             h2 Buscar personas
             form#search-form(action="/dashboard/search" method="GET" class="form-inline")
               input(type="text" name="term" placeholder="Nombre exacto o 'Nombre Apellido'" value=(typeof searchTerm !== 'undefined' ? searchTerm : ''))
@@ -126,13 +123,11 @@ html
                       else if u.pendingSent
                         span.status Solicitud enviada
                       else
-                        // Formulario para enviar solicitud: incluimos hidden term
                         form(action="/amistad/solicitud/send" method="POST" class="form-inline inline-form")
                           input(type="hidden" name="destinatario_id" value=u.usuario_id)
-                          // Este hidden transporta el término de búsqueda actual
                           input(type="hidden" name="term" value=searchTerm)
                           button(type="submit") Enviar solicitud
-                          
+
       // Panel de notificaciones flotante
       .notification-panel#notifPanel.hidden
         h3 Notificaciones
@@ -145,8 +140,7 @@ html
                 small.text-muted #{new Date(n.fecha).toLocaleString()}
         else
           p Sin nuevas notificaciones.
-
-    
+          
     script.
       window.myImagesCache = !{JSON.stringify(myImages)};
 
@@ -201,20 +195,45 @@ html
           button.addEventListener('click', async () => {
             const friendId = button.getAttribute('data-friend-id');
             const container = document.querySelector('.friend-albums-container');
-            container.innerHTML = 'Cargando álbumes...';
+            container.innerHTML = 'Cargando contenido compartido...';
             try {
-              const resp = await axios.get(`/dashboard/friend-albums/${friendId}`);
-              if (!resp.data.albums || resp.data.albums.length === 0) {
-                container.innerHTML = '<p>Este amigo no tiene álbumes o no compartió imágenes.</p>';
+              // Llamar a la nueva ruta que devuelve sólo los álbumes compartidos hacia mí
+              const resp = await axios.get(`/dashboard/shared-from/${friendId}`);
+              const albums = resp.data.albums;
+              if (!albums || albums.length === 0) {
+                container.innerHTML = '<p>Este usuario aún no ha compartido contenido contigo.</p>';
               } else {
+                // Construir lista de álbumes compartidos
                 const ul = document.createElement('ul');
-                ul.className = 'friend-albums-list';
-                resp.data.albums.forEach(a => {
+                ul.className = 'shared-albums-list';
+                albums.forEach(a => {
                   const li = document.createElement('li');
+                  // Mostrar título y número de imágenes
+                  let countText = '';
+                  if (typeof a.imageCount === 'number') {
+                    countText = ` (${a.imageCount})`;
+                  } else if (Array.isArray(a.images)) {
+                    countText = ` (${a.images.length})`;
+                  }
+                  // Enlace endpoint de listar imágenes de ese álbum en MI perfil
                   const link = document.createElement('a');
                   link.href = `/imagen/list/${a.album_id}`;
-                  link.textContent = `${a.titulo} (${a.imageCount})`;
+                  link.textContent = `${a.titulo}${countText}`;
                   li.appendChild(link);
+
+                  if (Array.isArray(a.images) && a.images.length > 0) {
+                    const thumbsContainer = document.createElement('div');
+                    thumbsContainer.className = 'thumbs-container';
+
+                    a.images.slice(0, 3).forEach(imgObj => {
+                      const imgEl = document.createElement('img');
+                      imgEl.src = imgObj.url;
+                      imgEl.alt = imgObj.descripcion || '';
+                      imgEl.className = 'thumb-small';
+                      thumbsContainer.appendChild(imgEl);
+                    });
+                    li.appendChild(thumbsContainer);
+                  }
                   ul.appendChild(li);
                 });
                 container.innerHTML = '';
@@ -222,7 +241,7 @@ html
               }
             } catch (err) {
               console.error(err);
-              container.innerHTML = '<p>Error al cargar álbumes.</p>';
+              container.innerHTML = '<p>Error al cargar contenido compartido.</p>';
             }
           });
         });

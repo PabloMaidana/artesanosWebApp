@@ -7,7 +7,7 @@ const { isLoggedIn } = require('../middlewares/auth');
 router.get('/', isLoggedIn, dashboardCtrl.showDashboard);
 
 // AJAX: obtener álbumes de un amigo
-router.get('/friend-albums/:friendId', isLoggedIn, dashboardCtrl.getFriendAlbums);
+router.get('/shared-from/:friendId', isLoggedIn, dashboardCtrl.getSharedContentFromFriend);
 
 // Compartir imágenes con solicitante (envía form desde pestaña Compartir)
 router.post('/share', isLoggedIn, dashboardCtrl.shareImagesWithRequester);

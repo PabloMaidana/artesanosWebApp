@@ -29,14 +29,13 @@ const Imagen = {
   },
 
   // Crear (subir) una imagen
-  create: async ({ album_id, url, descripcion }) => {
-    const [result] = await db.query(
-      `INSERT INTO imagen (album_id, url, descripcion, estado)
-       VALUES (?, ?, ?, 1)`,
-      [album_id, url, descripcion]
-    );
-    return result.insertId;
-  },
+ create: async ({ album_id, url, descripcion, public_id }) => {
+  const [result] = await db.query(
+    `INSERT INTO imagen (album_id, url, descripcion, public_id, estado, fecha) VALUES (?, ?, ?, ?, 1, NOW())`,
+    [album_id, url, descripcion, public_id]
+  );
+  return result.insertId;
+},
 
   // Obtener una imagen por su ID
   findById: async (imagen_id) => {

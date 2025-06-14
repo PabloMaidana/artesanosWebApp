@@ -1,3 +1,4 @@
+
 doctype html
 html
   head
@@ -13,26 +14,28 @@ html
 
     main.container
       h2 Subir Imagen
-      form.form-imagen-create(action="/imagen/create" method="POST")
-        label(for="album_id") Selecciona Álbum:
-        select#album_id(name="album_id" required)
-          if album_id
-            option(value=album_id selected) Álbum Actual (ID #{album_id})
-          each a in albumes
-            if !album_id || album_id != a.album_id
-              option(value=a.album_id) #{a.titulo}
 
-        label(for="url") URL de la Imagen:
-        input#url(type="text" name="url" required placeholder="http://...jpg")
+      form(action="/imagen/create" method="POST" enctype="multipart/form-data")
+        // Campo oculto con album_id si se preseleccionó un álbum
+        if album_id
+          input(type="hidden" name="album_id" value=album_id)
+        else
+          .mb-3
+            label.form-label(for="album_id") Selecciona Álbum
+            select#album_id.form-select(name="album_id" required)
+              if albumes.length === 0
+                option(value="" disabled selected) No tienes álbumes. Crea uno primero.
+              else
+                option(value="" disabled selected) -- Elige un álbum --
+                each a in albumes
+                  option(value=a.album_id)= `${a.titulo} (ID ${a.album_id})`
 
-        label(for="descripcion") Descripción:
-        textarea#descripcion(name="descripcion" rows="2" placeholder="Descripción breve")
+        .mb-3
+          label.form-label(for="imagen") Selecciona imagen
+          input#imagen.form-control(type="file" name="imagen" accept="image/*" required)
+        .mb-3
+          label.form-label(for="descripcion") Descripción (opcional)
+          input#descripcion.form-control(type="text" name="descripcion" placeholder="Descripción de la imagen")
+        button.btn.btn-primary(type="submit") Subir
 
-        label(for="tag_ids") Tags (mantén Ctrl para múltiples):
-        select#tag_ids(name="tag_ids" multiple)
-          each t in tags
-            option(value=t.tag_id) #{t.nombre}
-
-        button.btn-primary(type="submit") Subir
-        a.btn-secondary(href=`/imagen/list/${album_id || ''}`) Cancelar
 

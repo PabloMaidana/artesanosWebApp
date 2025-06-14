@@ -13,6 +13,16 @@ const Album = {
     return rows; // cada fila: { album_id, titulo, compartido_por_usuarioid }
   },
 
+  findById: async (album_id) => {
+    const [rows] = await db.query(
+      `SELECT album_id, usuario_id, titulo, compartido_por_usuarioid
+         FROM album
+        WHERE album_id = ?`,
+      [album_id]
+    );
+    return rows[0];
+  },
+
   // Crear un nuevo álbum
   create: async ({ usuario_id, titulo }) => {
     const [result] = await db.query(
@@ -41,6 +51,16 @@ const Album = {
       [aceptadorId]
     );
     return rows; // array de { album_id, solicitante_id, titulo }
+  },
+
+  findSharedAlbumsToUser: async (usuarioId, compartidoPorId) => {
+    const [rows] = await db.query(
+      `SELECT album_id, titulo, compartido_por_usuarioid
+         FROM album
+        WHERE usuario_id = ? AND compartido_por_usuarioid = ?`,
+      [usuarioId, compartidoPorId]
+    );
+    return rows;
   },
 
   // “Eliminar” un álbum (marcar estado = 0)

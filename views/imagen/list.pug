@@ -1,3 +1,4 @@
+
 doctype html
 html
   head
@@ -5,6 +6,36 @@ html
     meta(name="viewport" content="width=device-width, initial-scale=1")
     title Imágenes del Álbum – Artesanos.com
     link(rel="stylesheet" href="/public/css/main.css")
+    style.
+      /* Estilos específicos para la caja de comentarios */
+      .comments-box {
+        max-height: 150px; 
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        background: #f9f9f9;
+      }
+      .comment-item {
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.25rem;
+      }
+      .comment-item:last-child {
+        border-bottom: none;
+      }
+      .comment-form {
+        margin-top: 0.5rem;
+      }
+      .comment-form input[type="text"] {
+        width: 80%;
+        padding: 0.25rem;
+      }
+      .comment-form button {
+        padding: 0.3rem 0.6rem;
+        margin-left: 0.5rem;
+      }
+
   body
     header.navbar
       .container
@@ -12,19 +43,72 @@ html
         a.nav-link(href="/usuario/logout") Cerrar sesión
 
     main.container
-      h2 Imágenes del Álbum #{album_id}
-      a.btn-primary(href=`/imagen/create?album_id=${album_id}`) Subir Nueva Imagen
+      h2 Imágenes del Álbum #{album.titulo}
 
-      if imagenes.length === 0
+      // Mostrar opción de subida solo si canUpload
+      if canUpload
+        if album.compartido_por_usuarioid
+          a.btn.btn-primary(href=`/imagen/add-to-shared/${album.album_id}`) Subir a Álbum Compartido
+        else
+          a.btn.btn-primary(href=`/imagen/create/${album.album_id}`) Subir Nueva Imagen
+
+      if !imagenes
+        p.text-warning Error interno: no se han cargado las imágenes.
+      else if imagenes.length === 0
         p Sin imágenes en este álbum.
       else
         .grid-imagenes
           each img in imagenes
-            .card
-              img.card-img(src=img.url alt=img.descripcion)
+            .card(style="margin:0.5rem;")
+              if img.url
+                img.card-img-top(src=img.url, alt=img.descripcion || 'Imagen')
+              else
+                div.card-img-top(style="width:100%; height:180px; background:#eee; display:flex; align-items:center; justify-content:center;") Sin imagen
               .card-body
-                p.card-text #{img.descripcion}
-                a.btn-secondary(href=`/imagen/detail/${img.imagen_id}`) Ver Detalle
-                form.inline-form(action=`/imagen/delete/${img.imagen_id}` method="POST")
-                  button.btn-danger(type="submit") Eliminar
+                if img.descripcion
+                  p.card-text #{img.descripcion}
+                else
+                  p.card-text.text-muted Sin descripción
+
+                // Botones de detalle/eliminar si canUpload
+                 a.btn.btn-secondary.btn-sm(href=`/imagen/detail/${img.imagen_id}`) Ver Detalle
+                 if canUpload
+                  form.inline-form(action=`/imagen/delete/${img.imagen_id}`, method="POST", style="display:inline; margin-left:0.5rem;")
+                    button.btn.btn-danger.btn-sm(type="submit") Eliminar
+
+                // =========================
+                // Sección de comentarios debajo de cada imagen
+                if canComment
+                  // Caja scrollable con comentarios existentes
+                  .comments-box
+                    if img.comentarios && img.comentarios.length > 0
+                      each c in img.comentarios
+                        .comment-item
+                          strong #{c.nombre} #{c.apellido}:
+                          |  #{c.texto}
+                          br
+                          small.text-muted #{new Date(c.fecha).toLocaleString()}
+                    else
+                      p.text-muted Sin comentarios aún.
+
+                  // Formulario para nuevo comentario
+                  form.comment-form(action=`/imagen/comment/${img.imagen_id}` method="POST")
+                    input(type="text" name="texto" placeholder="Escribe un comentario..." required)
+                    button.btn.btn-primary.btn-sm(type="submit") Enviar
+                else
+                  // Si no puede comentar, pero igual mostramos comentarios
+                  .comments-box
+                    if img.comentarios && img.comentarios.length > 0
+                      each c in img.comentarios
+                        .comment-item
+                          strong #{c.nombre} #{c.apellido}:
+                          |  #{c.texto}
+                          br
+                          small.text-muted #{new Date(c.fecha).toLocaleString()}
+                    else
+                      p.text-muted Sin comentarios aún.
+
+    script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+
+
 
