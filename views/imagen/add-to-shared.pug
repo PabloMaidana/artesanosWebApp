@@ -5,7 +5,6 @@ html
     meta(name="viewport" content="width=device-width, initial-scale=1")
     title Álbum Compartido – Artesanos.com
     link(rel="stylesheet" href="/public/css/main.css")
-    // link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
   body
     // Header o navbar básico
     header.navbar
@@ -13,7 +12,7 @@ html
         a.navbar-brand(href="/") Artesanos.com
         // Mostrar enlace a perfil y logout si procede
         a.nav-link(href="/usuario/perfil") Mi Perfil
-        a.nav-link(href="/usuario/logout" style="margin-left:1rem;") Cerrar sesión
+        
 
     main.container(style="margin-top:2rem;")
       if album && album.titulo

@@ -1,7 +1,7 @@
 
 /* Layout general */
 body, html {
-  margin: 0;
+  margin:10;
   padding: 0;
   font-family: Arial, sans-serif;
 }
@@ -278,4 +278,28 @@ body, html {
 .card-body button {
   margin-right: 0.5rem;
   margin-top: 0.5rem;
+}
+
+.navbar-brand {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 15px;
+  background: linear-gradient(90deg, #ff9f1a, #ffc107);
+
+}
+
+.navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.nav-link {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #000000;
+  text-decoration: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
 }

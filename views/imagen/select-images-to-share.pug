@@ -1,0 +1,73 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Seleccionar Imágenes – Álbum #{sourceAlbum.titulo}
+    link(rel="stylesheet" href="/public/css/main.css")
+    style.
+      .grid-imagenes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .card {
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        width: calc(25% - 1rem);
+      }
+      @media (max-width: 768px) {
+        .card { width: calc(50% - 1rem); }
+      }
+      @media (max-width: 480px) {
+        .card { width: 100%; }
+      }
+      .card img { width: 100%; height: auto; display: block; }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+      }
+      .checkbox-label input {
+        margin-right: 0.5rem;
+      }
+
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        //a.nav-link(href=`/imagen/add-to-shared/${sharedAlbum.album_id}`) Volver a lista de álbumes para compartir
+        //a.nav-link(href="/dashboard") Dashboard
+
+    main.container(style="margin-top:2rem;")
+      h2 Seleccionar imágenes de álbum: #{sourceAlbum.titulo}
+      if images.length === 0
+        p No hay imágenes en este álbum propio.
+      else
+        form(action=`/imagen/add-to-shared/${sharedAlbum.album_id}/share` method="POST")
+          // Hidden sourceAlbumId
+          input(type="hidden" name="sourceAlbumId" value=sourceAlbum.album_id)
+          .grid-imagenes
+            each img in images
+              .card
+                if img.url
+                  img(src=img.url, alt=img.descripcion || 'Imagen')
+                else
+                  div(style="width:100%;height:150px;background:#eee;display:flex;align-items:center;justify-content:center;") Sin imagen
+                .card-body
+                  if img.descripcion
+                    p.card-text #{img.descripcion}
+                  else
+                    p.card-text.text-muted Sin descripción
+                  // Checkbox para seleccionar
+                  label.checkbox-label
+                    if sharedIdsSet.has(img.imagen_id)
+                      input(type="checkbox" name="imageIds" value=img.imagen_id checked)
+                    else
+                      input(type="checkbox" name="imageIds" value=img.imagen_id)
+                    |  Compartir esta imagen
+          button.btn.btn-primary(type="submit" style="margin-top:1rem;") Aceptar y Compartir Seleccionadas
+
+      hr
+      a.btn.btn-secondary(href=`/imagen/add-to-shared/${sharedAlbum.album_id}`) Volver a selección de álbumes

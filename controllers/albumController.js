@@ -1,4 +1,5 @@
 const Album = require('../models/albumModel');
+const Usuario = require('../models/usuarioModel');
 
 exports.listByUser = async (req, res) => {
   try {
@@ -41,12 +42,19 @@ exports.showCreate = (req, res) => {
 exports.create = async (req, res) => {
   try {
     const usuario_id = req.session.usuario_id;
-    const { titulo } = req.body;
-    await Album.create({ usuario_id, titulo });
-    res.redirect('/album/list');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error al crear álbum');
+    const titulo = req.body.titulo;
+    if (!titulo || titulo.trim() === '') {
+      // Podrías redirigir con mensaje de error, pero para simplicidad:
+      return res.redirect('/dashboard?tab=tab-my-albums&error=TituloRequerido');
+    }
+    // Crear álbum
+    await Album.create({ usuario_id, titulo: titulo.trim() });
+    // Redirigir al dashboard con la pestaña "Mis álbumes" activa
+    return res.redirect('/dashboard?tab=tab-my-albums');
+  } catch (err) {
+    console.error('Error al crear álbum:', err);
+    // En caso de error, igualmente rediriges al dashboard mostrando mensaje
+    return res.redirect('/dashboard?tab=tab-my-albums&error=ErrorCrearAlbum');
   }
 };
 

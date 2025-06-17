@@ -39,16 +39,15 @@ html
   body
     header.navbar
       .container
-        a.navbar-brand(href="/") Artesanos.com
-        a.nav-link(href="/usuario/logout") Cerrar sesión
+        a.navbar-brand(href="/") Artesanos.com 
+        
 
     main.container
       h2 Imágenes del Álbum #{album.titulo}
-
-      // Mostrar opción de subida solo si canUpload
       if canUpload
+        // Si es álbum compartido (album.compartido_por_usuarioid != null), usar enlace compartir:
         if album.compartido_por_usuarioid
-          a.btn.btn-primary(href=`/imagen/add-to-shared/${album.album_id}`) Subir a Álbum Compartido
+          a.btn.btn-primary(href=`/imagen/add-to-shared/${album.album_id}`) Agregar imágenes existentes
         else
           a.btn.btn-primary(href=`/imagen/create/${album.album_id}`) Subir Nueva Imagen
 
@@ -93,6 +92,7 @@ html
 
                   // Formulario para nuevo comentario
                   form.comment-form(action=`/imagen/comment/${img.imagen_id}` method="POST")
+                    input(type="hidden" name="album_id" value=album.album_id)
                     input(type="text" name="texto" placeholder="Escribe un comentario..." required)
                     button.btn.btn-primary.btn-sm(type="submit") Enviar
                 else

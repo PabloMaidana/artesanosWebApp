@@ -18,12 +18,21 @@ router.get('/detail/:id', isLoggedIn, imagenController.detail);
 // Eliminar imagen
 router.post('/delete/:id', isLoggedIn, imagenController.delete);
 
-router.get('/add-to-shared/:albumId', isLoggedIn, imagenController.showAddToSharedAlbum);
-
-router.post('/add-to-shared/:albumId', isLoggedIn, upload.single('imagen'), imagenController.postAddToSharedAlbum);
-
 router.post('/create', isLoggedIn, upload.single('imagen'), imagenController.create);
 
 router.post('/comment/:imagenId', isLoggedIn, imagenController.comment);
+
+
+// Mostrar lista de mis álbumes propios para elegir desde dónde compartir:
+
+router.get('/add-to-shared/:sharedAlbumId', isLoggedIn, imagenController.showAddToSharedAlbum);
+
+// Mostrar imágenes de un álbum propio seleccionado, con checkboxes:
+
+router.get('/add-to-shared/:sharedAlbumId/from/:sourceAlbumId', isLoggedIn, imagenController.showImagesFromOwnAlbumForSharing);
+
+// Procesar selección de imágenes para compartir:
+
+router.post('/add-to-shared/:sharedAlbumId/share', isLoggedIn, imagenController.postShareImagesToSharedAlbum);
 
 module.exports = router;

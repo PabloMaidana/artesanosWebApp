@@ -7,7 +7,7 @@ const Album = {
     const [rows] = await db.query(
       `SELECT album_id, titulo, compartido_por_usuarioid
          FROM album
-        WHERE usuario_id = ?`,
+        WHERE usuario_id = ? `,
       [usuario_id]
     );
     return rows; // cada fila: { album_id, titulo, compartido_por_usuarioid }

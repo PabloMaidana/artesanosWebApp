@@ -1,0 +1,29 @@
+
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Compartir Imágenes – Álbum #{sharedAlbum.titulo}
+    link(rel="stylesheet" href="/public/css/main.css")
+  body
+    header.navbar
+      .container
+        a.navbar-brand(href="/") Artesanos.com
+        
+
+    main.container(style="margin-top:2rem;")
+      h2 Compartir imágenes en álbum: #{sharedAlbum.titulo}
+
+      if albumesPropios.length === 0
+        p No tienes álbumes propios. Primero crea uno en “Mis Álbumes”.
+      else
+        p Selecciona uno de tus álbumes para elegir imágenes a compartir:
+        ul
+          each alb in albumesPropios
+            li
+              // Enlace a listar imágenes de este álbum propio para compartir
+              a(href=`/imagen/add-to-shared/${sharedAlbum.album_id}/from/${alb.album_id}`)= `${alb.titulo}`
+
+      hr
+      a.btn.btn-secondary(href=`/imagen/list/${sharedAlbum.album_id}`) Ver álbum compartido

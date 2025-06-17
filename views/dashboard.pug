@@ -64,8 +64,8 @@ html
               ul.my-albums-list
                 each a in myAlbums
                   li
-                    a(href=`/imagen/list/${a.album_id}`) #{a.titulo} (#{a.album_id})
-            .upload-link
+                    a(href=`/imagen/list/${a.album_id}`) #{a.titulo} 
+            //.upload-link
               a.btn(href=`/imagen/create/${myAlbums.length>0 ? myAlbums[0].album_id : ''}`) Subir imagen
 
           // 3) Compartir
