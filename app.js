@@ -19,7 +19,7 @@ const sessionStore = new MySQLStore({}, dbConfig);
 app.use(
   session({
     key: 'artesanos_session',
-    secret: 'un-super-secret',
+    secret: 'process.env.SESSION_SECRET',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
