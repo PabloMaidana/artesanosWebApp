@@ -36,8 +36,8 @@ const Album = {
   createSharedAlbum: async ({ solicitanteId, aceptador }) => {
     const titulo = `${aceptador.nombre} ${aceptador.apellido}`;
     const [result] = await db.query(
-      `INSERT INTO album (usuario_id, titulo, compartido_por_usuarioid) VALUES (?, ?, ?)`,
-      [solicitanteId, titulo, aceptador.usuario_id]
+      `INSERT INTO album (usuario_id, titulo, compartido_por_usuarioid, estado) VALUES (?, ?, ?, ?)`,
+      [solicitanteId, titulo, aceptador.usuario_id, 0]
     );
     return result.insertId;
   },
